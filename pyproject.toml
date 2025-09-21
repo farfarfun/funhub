@@ -1,0 +1,37 @@
+[project]
+name = "funhub"
+version = "0.1.1"
+description = "统一管理GitHub、HuggingFace等Git仓库的代码存储工具"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [ "requests>=2.31.0", "click>=8.1.0", "pyyaml>=6.0", "tqdm>=4.65.0", "funutil>=0.1.0", "gitpython>=3.1.0", "fundrive>=0.1.0",]
+[[project.authors]]
+name = "牛哥"
+email = "niuliangtao@qq.com"
+
+[[project.authors]]
+name = "farfarfun"
+email = "farfarfun@qq.com"
+
+[[project.maintainers]]
+name = "牛哥"
+email = "niuliangtao@qq.com"
+
+[[project.maintainers]]
+name = "farfarfun"
+email = "farfarfun@qq.com"
+
+[build-system]
+requires = [ "hatchling",]
+build-backend = "hatchling.build"
+
+[project.scripts]
+funhub = "funhub.cli:main"
+
+[project.urls]
+Organization = "https://github.com/farfarfun"
+Repository = "https://github.com/farfarfun/funhub"
+Releases = "https://github.com/farfarfun/funhub/releases"
+
+[tool.setuptools]
+license-files = []
