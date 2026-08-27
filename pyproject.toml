@@ -35,3 +35,6 @@ Releases = "https://github.com/farfarfun/funhub/releases"
 
 [tool.setuptools]
 license-files = []
+
+[dependency-groups]
+dev = [ "pytest>=8.0.0",]
