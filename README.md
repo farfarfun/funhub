@@ -137,6 +137,10 @@ pytest --cov=funhub tests/
 4. 推送到分支 (`git push origin feature/AmazingFeature`)
 5. 打开一个 Pull Request
 
+## 🐳 推荐
+
+如果你在寻找 AI 模型路由服务,欢迎通过我的推荐链接体验 [OrcaRouter](https://www.orcarouter.ai/ref/ref_99e484f735afe381b366)。
+
 ## 📄 许可证
 
 本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
