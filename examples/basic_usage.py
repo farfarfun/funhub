@@ -7,10 +7,10 @@ FunHub 基本使用示例
 2. 使用端：用户直接使用fid通过fundrive下载数据
 """
 
-from funhub import RepoManager, config
+from funhub import base_config, repo_manager
 
 
-def sync_github_repo(repo_manager):
+def sync_github_repo():
     """同步GitHub仓库示例"""
     print("=== 同步GitHub仓库示例 ===")
 
@@ -21,9 +21,9 @@ def sync_github_repo(repo_manager):
     result = repo_manager.sync_repo(url, branch="main")
 
     if result.success:
-        print(f"✅ 同步成功!")
+        print("✅ 同步成功!")
         print(f"📁 文件ID (fid): {result.fid}")
-        print(f"💡 使用提示: 请使用此fid通过fundrive下载数据")
+        print("💡 使用提示: 请使用此fid通过fundrive下载数据")
         print(f"   示例命令: fundrive download {result.fid} ./pytorch")
         return result.fid
     else:
@@ -42,9 +42,9 @@ def sync_huggingface_model():
     result = repo_manager.sync_repo(url)
 
     if result.success:
-        print(f"✅ 同步成功!")
+        print("✅ 同步成功!")
         print(f"📁 文件ID (fid): {result.fid}")
-        print(f"💡 使用提示: 请使用此fid通过fundrive下载模型")
+        print("💡 使用提示: 请使用此fid通过fundrive下载模型")
         print(f"   示例命令: fundrive download {result.fid} ./bert-base-uncased")
         return result.fid
     else:
@@ -110,18 +110,18 @@ def configure_proxy():
     print("\n=== 配置代理示例 ===")
 
     # 设置HTTP代理（如果需要）
-    # config.set("network.proxy.http", "http://proxy.example.com:8080")
-    # config.set("network.proxy.https", "https://proxy.example.com:8080")
+    # base_config.set("network.proxy.http", "http://proxy.example.com:8080")
+    # base_config.set("network.proxy.https", "https://proxy.example.com:8080")
 
     # 设置网络超时
-    config.set("network.timeout", 60)
+    base_config.set("network.timeout", 60)
 
     # 保存配置
-    config.save_config()
+    base_config.save_config()
 
     print("⚙️ 配置已更新")
-    print(f"🌐 网络超时: {config.get('network.timeout')}秒")
-    print(f"🔧 配置文件: {config.config_path}")
+    print(f"🌐 网络超时: {base_config.get('network.timeout')}秒")
+    print(f"🔧 配置文件: {base_config.config_path}")
 
 
 def demonstrate_decoupled_workflow():
@@ -164,10 +164,10 @@ def main():
     configure_proxy()
 
     # 同步GitHub仓库
-    github_fid = sync_github_repo()
+    sync_github_repo()
 
     # 同步HuggingFace模型
-    hf_fid = sync_huggingface_model()
+    sync_huggingface_model()
 
     # 列出已同步的仓库
     list_synced_repos()

@@ -5,11 +5,11 @@
 
 import json
 from pathlib import Path
-from typing import Dict, List, Optional
 from urllib.parse import urlparse
-from funutil import getLogger
 
-from funhub.base import BaseProvider, SyncResult
+from farlog import getLogger
+
+from funhub.base import BaseProvider, SyncResult, base_config
 
 logger = getLogger("funhub")
 
@@ -28,8 +28,8 @@ class RepoManager:
             drive: fundrive对象，如果不传则各个提供者会使用OSdrive作为默认值
         """
         self.drive = drive
-        self.providers: Dict[str, BaseProvider] = {}
-        self.sync_records: Dict[str, Dict] = {}
+        self.providers: dict[str, BaseProvider] = {}
+        self.sync_records: dict[str, dict] = {}
         self._register_providers()
         self._load_sync_records()
 
@@ -50,28 +50,30 @@ class RepoManager:
 
     def _load_sync_records(self):
         """加载同步记录"""
+        records_file = base_config.config_dir / "sync_records.json"
+        if not records_file.exists():
+            self.sync_records = {}
+            logger.info("同步记录文件不存在，使用空记录")
+            return
+
         try:
-            records_file = config.config_dir / "sync_records.json"
-            if records_file.exists():
-                with open(records_file, "r", encoding="utf-8") as f:
-                    self.sync_records = json.load(f)
-                logger.info(f"已加载 {len(self.sync_records)} 条同步记录")
-            else:
-                self.sync_records = {}
-                logger.info("同步记录文件不存在，使用空记录")
-        except Exception as e:
-            logger.error(f"加载同步记录失败: {e}")
+            with open(records_file, "r", encoding="utf-8") as f:
+                self.sync_records = json.load(f)
+            logger.info(f"已加载 {len(self.sync_records)} 条同步记录")
+        except (OSError, json.JSONDecodeError) as e:
+            logger.error(f"加载同步记录失败: {records_file}, {e}")
             self.sync_records = {}
 
     def _save_sync_records(self):
         """保存同步记录"""
+        records_file = base_config.config_dir / "sync_records.json"
         try:
-            records_file = config.config_dir / "sync_records.json"
             with open(records_file, "w", encoding="utf-8") as f:
                 json.dump(self.sync_records, f, ensure_ascii=False, indent=2)
             logger.info("同步记录已保存")
-        except Exception as e:
-            logger.error(f"保存同步记录失败: {e}")
+        except OSError as e:
+            logger.error(f"保存同步记录失败: {records_file}, {e}")
+            raise
 
     def sync_repo(
         self, url: str, branch: str = "main", force: bool = False
@@ -151,7 +153,7 @@ class RepoManager:
             logger.error(f"同步仓库时发生错误: {e}")
             return SyncResult(False, message=f"同步过程中发生错误: {e}")
 
-    def _identify_source(self, url: str) -> Optional[str]:
+    def _identify_source(self, url: str) -> str | None:
         """
         识别仓库来源
 
@@ -178,7 +180,7 @@ class RepoManager:
 
     def get_repo_fid(
         self, source: str, user: str, repo: str, branch: str = "main"
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         获取仓库在fundrive中的文件ID
 
@@ -195,7 +197,7 @@ class RepoManager:
         record = self.sync_records.get(record_key)
         return record.get("fid") if record else None
 
-    def list_synced_repos(self, source: Optional[str] = None) -> List[Dict]:
+    def list_synced_repos(self, source: str | None = None) -> list[dict]:
         """
         列出已同步的仓库
 
@@ -238,7 +240,7 @@ class RepoManager:
             logger.warning(f"同步记录不存在: {record_key}")
             return False
 
-    def get_repo_info(self, source: str, user: str, repo: str) -> Dict:
+    def get_repo_info(self, source: str, user: str, repo: str) -> dict:
         """
         获取仓库信息
 

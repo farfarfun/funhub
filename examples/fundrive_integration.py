@@ -8,7 +8,7 @@ FunHub Fundrive集成示例
 3. 完整的同步和下载工作流程
 """
 
-from funhub import RepoManager, config
+from funhub import RepoManager, base_config
 
 
 def example_with_default_drive():
@@ -25,9 +25,9 @@ def example_with_default_drive():
     result = repo_manager.sync_repo(url, branch="master")
 
     if result.success:
-        print(f"✅ 同步成功!")
+        print("✅ 同步成功!")
         print(f"📁 文件ID (fid): {result.fid}")
-        print(f"💡 使用OSdrive存储，数据保存在本地文件系统")
+        print("💡 使用OSdrive存储，数据保存在本地文件系统")
         return result.fid
     else:
         print(f"❌ 同步失败: {result.message}")
@@ -40,12 +40,11 @@ def example_with_custom_drive():
 
     try:
         # 导入fundrive相关模块
-        from fundrive import OSdrive
-        # 如果有其他drive类型，也可以使用，比如：
-        # from fundrive import S3drive, AliyunOSSdrive
+        from fundrive.drives.os import OSDrive
+        # 如果有其他drive类型，也可以使用，参见 fundrive.drives 下的其他实现
 
         # 创建自定义drive对象
-        custom_drive = OSdrive()
+        custom_drive = OSDrive()
 
         # 创建RepoManager，传入自定义drive
         repo_manager = RepoManager(drive=custom_drive)
@@ -57,9 +56,9 @@ def example_with_custom_drive():
         result = repo_manager.sync_repo(url)
 
         if result.success:
-            print(f"✅ 同步成功!")
+            print("✅ 同步成功!")
             print(f"📁 文件ID (fid): {result.fid}")
-            print(f"💡 使用自定义drive存储")
+            print("💡 使用自定义drive存储")
             return result.fid
         else:
             print(f"❌ 同步失败: {result.message}")
@@ -77,7 +76,7 @@ def demonstrate_download_workflow(fid):
         print("\n❌ 没有有效的fid，跳过下载演示")
         return
 
-    print(f"\n=== 下载工作流程演示 ===")
+    print("\n=== 下载工作流程演示 ===")
     print(f"📁 文件ID: {fid}")
     print("\n🎯 解耦架构说明:")
     print("1. 同步阶段已完成 - FunHub将仓库上传到fundrive并返回fid")
@@ -86,8 +85,8 @@ def demonstrate_download_workflow(fid):
     print("方式1: 使用fundrive命令行工具")
     print(f"   fundrive download {fid} ./downloaded_repo")
     print("\n方式2: 使用fundrive Python API")
-    print("   from fundrive import OSdrive")
-    print("   drive = OSdrive()")
+    print("   from fundrive.drives.os import OSDrive")
+    print("   drive = OSDrive()")
     print(f"   drive.download('{fid}', './downloaded_repo')")
     print("\n方式3: 使用fundrive Web界面")
     print(f"   访问fundrive管理界面，输入fid: {fid}")
@@ -129,25 +128,25 @@ def configure_fundrive_settings():
     print("\n=== Fundrive配置示例 ===")
 
     # 配置存储路径
-    config.set("storage.base_path", "~/fundrive")
+    base_config.set("storage.base_path", "~/fundrive")
 
     # 配置网络设置
-    config.set("network.timeout", 300)  # 5分钟超时，适合大文件上传
-    config.set("network.retry_times", 3)
+    base_config.set("network.timeout", 300)  # 5分钟超时，适合大文件上传
+    base_config.set("network.retry_times", 3)
 
     # 配置并发设置
-    config.set("download.chunk_size", 8192)  # 8KB chunks
-    config.set("download.max_workers", 4)
+    base_config.set("download.chunk_size", 8192)  # 8KB chunks
+    base_config.set("download.max_workers", 4)
 
     # 保存配置
-    config.save_config()
+    base_config.save_config()
 
     print("⚙️ Fundrive配置已更新:")
-    print(f"📁 存储路径: {config.get('storage.base_path')}")
-    print(f"⏱️ 网络超时: {config.get('network.timeout')}秒")
-    print(f"🔄 重试次数: {config.get('network.retry_times')}")
-    print(f"📦 块大小: {config.get('download.chunk_size')} bytes")
-    print(f"🧵 最大工作线程: {config.get('download.max_workers')}")
+    print(f"📁 存储路径: {base_config.get('storage.base_path')}")
+    print(f"⏱️ 网络超时: {base_config.get('network.timeout')}秒")
+    print(f"🔄 重试次数: {base_config.get('network.retry_times')}")
+    print(f"📦 块大小: {base_config.get('download.chunk_size')} bytes")
+    print(f"🧵 最大工作线程: {base_config.get('download.max_workers')}")
 
 
 def main():

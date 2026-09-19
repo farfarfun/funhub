@@ -1,10 +1,47 @@
+import os
 from abc import ABC, abstractmethod
-from typing import Dict, Optional, Tuple
-from funutil import getLogger
+from contextlib import contextmanager
+
+from farlog import getLogger
 from fundrive.core import BaseDrive
 from fundrive.drives.os import OSDrive
 
 logger = getLogger("funhub")
+
+
+@contextmanager
+def proxy_env(proxies: dict[str, str] | None):
+    """在 with 代码块内临时设置 HTTP_PROXY/HTTPS_PROXY 环境变量。
+
+    `funget` 的下载器不接受显式的 `proxies` 参数，但底层 `requests.Session`
+    默认会读取环境变量代理设置，因此通过环境变量间接传递代理配置。
+
+    Args:
+        proxies: 形如 ``{"http": "...", "https": "..."}`` 的代理配置，为空则不做任何改动
+
+    Yields:
+        None
+    """
+    if not proxies:
+        yield
+        return
+
+    env_keys = {"http": "HTTP_PROXY", "https": "HTTPS_PROXY"}
+    previous = {}
+    try:
+        for scheme, value in proxies.items():
+            env_key = env_keys.get(scheme)
+            if not env_key:
+                continue
+            previous[env_key] = os.environ.get(env_key)
+            os.environ[env_key] = value
+        yield
+    finally:
+        for env_key, old_value in previous.items():
+            if old_value is None:
+                os.environ.pop(env_key, None)
+            else:
+                os.environ[env_key] = old_value
 
 
 class SyncResult:
@@ -13,9 +50,9 @@ class SyncResult:
     def __init__(
         self,
         success: bool,
-        fid: Optional[str] = None,
+        fid: str | None = None,
         message: str = "",
-        metadata: Optional[Dict] = None,
+        metadata: dict | None = None,
     ):
         """
         初始化同步结果
@@ -60,6 +97,8 @@ class BaseProvider(ABC):
         if drive is None:
             self.drive = OSDrive()
             self.logger.info("使用OSDrive作为默认存储")
+        else:
+            self.drive = drive
 
     @abstractmethod
     def sync_repo_to_drive(
@@ -77,10 +116,9 @@ class BaseProvider(ABC):
         Returns:
             SyncResult: 同步结果，包含fid等信息
         """
-        pass
 
     @abstractmethod
-    def get_repo_info(self, user: str, repo: str) -> Dict:
+    def get_repo_info(self, user: str, repo: str) -> dict:
         """
         获取仓库基本信息
 
@@ -91,10 +129,9 @@ class BaseProvider(ABC):
         Returns:
             仓库信息字典
         """
-        pass
 
     @abstractmethod
-    def parse_url(self, url: str) -> Tuple[str, str]:
+    def parse_url(self, url: str) -> tuple[str, str]:
         """
         解析仓库URL，提取用户名和仓库名
 
@@ -104,7 +141,6 @@ class BaseProvider(ABC):
         Returns:
             (用户名, 仓库名) 元组
         """
-        pass
 
     def get_drive_path(self, user: str, repo: str, branch: str = "main") -> str:
         """
@@ -156,7 +192,7 @@ class BaseProvider(ABC):
         self.logger.info(f"上传文件到fundrive: {file_path} -> {drive_path}")
 
         # 使用fundrive上传文件
-        fid = self.drive.upload_dir(filedir=file_path, fid=drive_path, *args, **kwargs)
+        fid = self.drive.upload_dir(*args, filedir=file_path, fid=drive_path, **kwargs)
 
         if fid:
             self.logger.success(f"文件上传成功，fid: {fid}")

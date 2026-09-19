@@ -3,25 +3,26 @@
 提供funhub的命令行操作功能
 """
 
+from importlib.metadata import version
+
 import click
-from typing import Optional
-from funutil import getLogger
+from farlog import getLogger
+
+from funhub.base import base_config
 
 from .manager import repo_manager
-from funhub.base import config
 
 logger = getLogger("funhub.cli")
 
 
 @click.group()
-@click.version_option(version="0.1.0")
+@click.version_option(version=version("funhub"))
 def main():
     """FunHub - 将GitHub、HuggingFace等Git仓库同步到fundrive的工具
 
     注意：funhub只负责同步Git仓库到fundrive并返回fid，
     使用时请直接通过fundrive和fid下载数据，实现完全解耦。
     """
-    pass
 
 
 @main.command()
@@ -50,7 +51,7 @@ def sync(url: str, force: bool, branch: str):
 
 @main.command()
 @click.option("--source", "-s", help="指定来源 (github, huggingface等)")
-def list(source: Optional[str]):
+def list(source: str | None):
     """列出已同步的仓库"""
     repos = repo_manager.list_synced_repos(source)
 
@@ -147,19 +148,18 @@ def info(source: str, user: str, repo: str, branch: str):
 @main.group()
 def config_cmd():
     """配置管理"""
-    pass
 
 
 @config_cmd.command(name="show")
 def show_config():
     """显示当前配置"""
     click.echo("当前配置:")
-    click.echo(f"存储路径: {config.get('storage.base_path')}")
-    click.echo(f"GitHub路径: {config.get('storage.github_path')}")
-    click.echo(f"HuggingFace路径: {config.get('storage.huggingface_path')}")
-    click.echo(f"网络超时: {config.get('network.timeout')}秒")
-    click.echo(f"重试次数: {config.get('network.retry_times')}")
-    click.echo(f"跳过已存在: {config.get('download.skip_existing')}")
+    click.echo(f"存储路径: {base_config.get('storage.base_path')}")
+    click.echo(f"GitHub路径: {base_config.get('storage.github_path')}")
+    click.echo(f"HuggingFace路径: {base_config.get('storage.huggingface_path')}")
+    click.echo(f"网络超时: {base_config.get('network.timeout')}秒")
+    click.echo(f"重试次数: {base_config.get('network.retry_times')}")
+    click.echo(f"跳过已存在: {base_config.get('download.skip_existing')}")
 
 
 @config_cmd.command(name="set")
@@ -178,8 +178,8 @@ def set_config(key: str, value: str):
     elif value.isdigit():
         value = int(value)
 
-    config.set(key, value)
-    config.save_config()
+    base_config.set(key, value)
+    base_config.save_config()
 
     click.echo(click.style(f"✓ 配置已更新: {key} = {value}", fg="green"))
 
@@ -187,8 +187,10 @@ def set_config(key: str, value: str):
 @config_cmd.command(name="init")
 def init_config():
     """初始化配置文件"""
-    config.save_config()
-    click.echo(click.style(f"✓ 配置文件已初始化: {config.config_path}", fg="green"))
+    base_config.save_config()
+    click.echo(
+        click.style(f"✓ 配置文件已初始化: {base_config.config_path}", fg="green")
+    )
 
 
 if __name__ == "__main__":
