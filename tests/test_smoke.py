@@ -20,9 +20,9 @@
 import os
 import shutil
 import tempfile
+from unittest.mock import MagicMock, patch
 
 import pytest
-from unittest.mock import MagicMock, patch
 
 # ---------------------------------------------------------------------------
 # 必须在 `import funhub` 之前重定向 HOME，防止污染开发者真实的 ~/.funhub。
@@ -30,12 +30,12 @@ from unittest.mock import MagicMock, patch
 _FAKE_HOME = tempfile.mkdtemp(prefix="funhub_test_home_")
 os.environ["HOME"] = _FAKE_HOME
 
-import funhub  # noqa: E402
-from funhub.base.config import Config  # noqa: E402
-from funhub.base.provider import BaseProvider, SyncResult  # noqa: E402
-from funhub.manager import RepoManager  # noqa: E402
-from funhub.providers.github import GitHubProvider  # noqa: E402
-from funhub.providers.huggingface import HuggingFaceProvider  # noqa: E402
+import funhub
+from funhub.base.config import Config
+from funhub.base.provider import BaseProvider, SyncResult
+from funhub.manager import RepoManager
+from funhub.providers.github import GitHubProvider
+from funhub.providers.huggingface import HuggingFaceProvider
 
 
 def teardown_module(_module):
@@ -61,11 +61,11 @@ def test_submodule_imports():
     import funhub.base
     import funhub.base.config
     import funhub.base.provider
+    import funhub.cli
     import funhub.manager
     import funhub.providers
     import funhub.providers.github
     import funhub.providers.huggingface
-    import funhub.cli
 
     assert funhub.base and funhub.manager and funhub.providers and funhub.cli
 
@@ -228,14 +228,58 @@ def test_repo_manager_list_synced_repos_empty():
     assert manager.list_synced_repos() == []
 
 
-# 已知问题（不在本次冒烟测试范围内修复，仅记录）：
-# funhub/manager.py 的 RepoManager._load_sync_records() 引用了未导入的
-# 名字 `config`（很可能应为同模块可用的 `base_config`），每次构造
-# RepoManager() 都会触发 NameError。该异常被方法内的
-# `except Exception` 吞掉，只打一条 ERROR 日志，`self.sync_records`
-# 回退为空字典，因此不会导致导入/构造失败，也不影响本冒烟测试套件通过。
-# 但这意味着"加载已有同步记录"这个功能实际上从未生效——已在 PR/issue
-# 中报告，未在此修复，避免超出"轻量冒烟测试"的范围改动业务逻辑。
+def test_repo_manager_sync_repo_success_persists_record():
+    """同步成功后记录应写入磁盘，且能被新的 RepoManager 实例重新加载。"""
+    manager = RepoManager(drive=MagicMock())
+    fake_provider = MagicMock()
+    fake_provider.parse_url.return_value = ("octocat", "hello-world")
+    fake_provider.validate_repo_name.return_value = True
+    fake_provider.sync_repo_to_drive.return_value = SyncResult(
+        True, fid="fid-123", message="ok", metadata={"k": "v"}
+    )
+    manager.providers["github"] = fake_provider
+
+    result = manager.sync_repo("https://github.com/octocat/hello-world")
+
+    assert result.success is True
+    assert result.fid == "fid-123"
+    record_key = "github/octocat/hello-world/main"
+    assert record_key in manager.sync_records
+    assert manager.sync_records[record_key]["fid"] == "fid-123"
+
+    # 重新构造 RepoManager，验证同步记录能从磁盘正确加载（回归：
+    # 此前 _load_sync_records 引用未导入的 `config` 触发 NameError，
+    # 被 except Exception 吞掉后记录永远无法持久化/加载）。
+    reloaded = RepoManager(drive=MagicMock())
+    assert reloaded.sync_records.get(record_key, {}).get("fid") == "fid-123"
+
+
+def test_repo_manager_sync_repo_existing_record_skips_provider_call():
+    manager = RepoManager(drive=MagicMock())
+    fake_provider = MagicMock()
+    fake_provider.parse_url.return_value = ("octocat", "hello-world")
+    fake_provider.validate_repo_name.return_value = True
+    manager.providers["github"] = fake_provider
+    record_key = "github/octocat/hello-world/main"
+    manager.sync_records[record_key] = {"fid": "cached-fid"}
+
+    result = manager.sync_repo("https://github.com/octocat/hello-world")
+
+    assert result.success is True
+    assert result.fid == "cached-fid"
+    fake_provider.sync_repo_to_drive.assert_not_called()
+
+
+def test_repo_manager_remove_sync_record_success_and_failure():
+    manager = RepoManager(drive=MagicMock())
+    record_key = "github/octocat/hello-world/main"
+    manager.sync_records[record_key] = {"fid": "abc"}
+
+    assert manager.remove_sync_record("github", "octocat", "hello-world") is True
+    assert record_key not in manager.sync_records
+
+    # 记录已不存在，应返回 False 而不是抛异常
+    assert manager.remove_sync_record("github", "octocat", "hello-world") is False
 
 
 # ---------------------------------------------------------------------------
@@ -245,6 +289,7 @@ def test_repo_manager_list_synced_repos_empty():
 
 def test_cli_help_exits_cleanly():
     from click.testing import CliRunner
+
     from funhub.cli import main
 
     runner = CliRunner()
@@ -255,9 +300,82 @@ def test_cli_help_exits_cleanly():
 
 def test_cli_subcommand_help_exits_cleanly():
     from click.testing import CliRunner
+
     from funhub.cli import main
 
     runner = CliRunner()
     for args in (["sync", "--help"], ["list", "--help"], ["config", "--help"]):
         result = runner.invoke(main, args)
         assert result.exit_code == 0, f"{args} failed: {result.output}"
+
+
+def test_cli_version_option():
+    from click.testing import CliRunner
+
+    from funhub.cli import main
+
+    runner = CliRunner()
+    result = runner.invoke(main, ["--version"])
+    assert result.exit_code == 0
+    assert "version" in result.output.lower()
+    assert "0.1.0" not in result.output  # 版本号必须随包元数据更新，不再硬编码
+
+
+def test_cli_sync_success_exit_code_zero():
+    from click.testing import CliRunner
+
+    from funhub.cli import main
+
+    with patch("funhub.cli.repo_manager") as mock_manager:
+        mock_manager.sync_repo.return_value = SyncResult(
+            True, fid="fid-1", message="ok"
+        )
+        runner = CliRunner()
+        result = runner.invoke(main, ["sync", "https://github.com/octocat/hello-world"])
+
+    assert result.exit_code == 0
+    assert "fid-1" in result.output
+
+
+def test_cli_sync_failure_exit_code_nonzero():
+    from click.testing import CliRunner
+
+    from funhub.cli import main
+
+    with patch("funhub.cli.repo_manager") as mock_manager:
+        mock_manager.sync_repo.return_value = SyncResult(False, message="下载失败")
+        runner = CliRunner()
+        result = runner.invoke(main, ["sync", "https://github.com/octocat/hello-world"])
+
+    assert result.exit_code != 0
+    assert "下载失败" in result.output
+
+
+def test_cli_config_show_exits_cleanly():
+    # 回归测试：此前 cli.py 通过 `from funhub.base import config` 拿到的是
+    # 子模块对象而非 `base_config` 配置单例，调用 `.get()` 必然抛 AttributeError。
+    from click.testing import CliRunner
+
+    from funhub.cli import main
+
+    runner = CliRunner()
+    result = runner.invoke(main, ["config", "show"])
+
+    assert result.exit_code == 0, result.output
+    assert "存储路径" in result.output
+
+
+def test_cli_config_set_and_init_exit_cleanly(tmp_path, monkeypatch):
+    from click.testing import CliRunner
+
+    from funhub.cli import main
+
+    monkeypatch.setattr("funhub.cli.base_config.config_path", tmp_path / "config.yaml")
+
+    runner = CliRunner()
+    result = runner.invoke(main, ["config", "set", "network.timeout", "60"])
+    assert result.exit_code == 0, result.output
+    assert (tmp_path / "config.yaml").exists()
+
+    result = runner.invoke(main, ["config", "init"])
+    assert result.exit_code == 0, result.output
