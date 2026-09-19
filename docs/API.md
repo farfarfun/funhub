@@ -26,17 +26,18 @@ class BaseProvider(ABC):
 
 ```python
 @abstractmethod
-def sync_repo_to_drive(self, user: str, repo: str, branch: str = "main", 
-                      force: bool = False) -> SyncResult:
+def sync_repo_to_drive(
+    self, user: str, repo: str, branch: str = "main", force: bool = False
+) -> SyncResult:
     """
     将仓库同步到fundrive
-    
+
     Args:
         user: 用户名/组织名
         repo: 仓库名
         branch: 分支名，默认为main
         force: 是否强制重新同步
-        
+
     Returns:
         SyncResult: 同步结果，包含fid等信息
     """
@@ -46,7 +47,7 @@ def sync_repo_to_drive(self, user: str, repo: str, branch: str = "main",
 
 ```python
 @abstractmethod
-def get_repo_info(self, user: str, repo: str) -> Dict:
+def get_repo_info(self, user: str, repo: str) -> dict:
     """
     获取仓库基本信息
     
@@ -63,7 +64,7 @@ def get_repo_info(self, user: str, repo: str) -> Dict:
 
 ```python
 @abstractmethod
-def parse_url(self, url: str) -> Tuple[str, str]:
+def parse_url(self, url: str) -> tuple[str, str]:
     """
     解析仓库URL，提取用户名和仓库名
     
@@ -84,12 +85,17 @@ def parse_url(self, url: str) -> Tuple[str, str]:
 ```python
 class SyncResult:
     """同步结果类"""
-    
-    def __init__(self, success: bool, fid: Optional[str] = None, 
-                 message: str = "", metadata: Optional[Dict] = None):
+
+    def __init__(
+        self,
+        success: bool,
+        fid: str | None = None,
+        message: str = "",
+        metadata: dict | None = None,
+    ):
         """
         初始化同步结果
-        
+
         Args:
             success: 是否同步成功
             fid: fundrive中的文件ID，用于后续下载
@@ -144,7 +150,7 @@ else:
 ##### list_synced_repos()
 
 ```python
-def list_synced_repos(self, source: Optional[str] = None) -> List[Dict]:
+def list_synced_repos(self, source: str | None = None) -> list[dict]:
     """
     列出已同步的仓库
     
@@ -169,16 +175,18 @@ github_repos = repo_manager.list_synced_repos("github")
 ##### get_repo_fid()
 
 ```python
-def get_repo_fid(self, source: str, user: str, repo: str, branch: str = "main") -> Optional[str]:
+def get_repo_fid(
+    self, source: str, user: str, repo: str, branch: str = "main"
+) -> str | None:
     """
     获取仓库在fundrive中的文件ID
-    
+
     Args:
         source: 来源
         user: 用户名
         repo: 仓库名
         branch: 分支名
-        
+
     Returns:
         文件ID，如果不存在返回None
     """
@@ -222,7 +230,7 @@ GitHub仓库提供者，继承自BaseProvider。
     "created_at": "创建时间",
     "updated_at": "更新时间",
     "clone_url": "克隆URL",
-    "html_url": "网页URL"
+    "html_url": "网页URL",
 }
 ```
 
@@ -245,7 +253,7 @@ HuggingFace仓库提供者，继承自BaseProvider。
     "created_at": "创建时间",
     "last_modified": "最后修改时间",
     "model_index": "模型索引",
-    "private": "是否私有"
+    "private": "是否私有",
 }
 ```
 
@@ -294,21 +302,14 @@ def set(self, key: str, value: Any):
         "base_path": "~/fundrive",
         "github_path": "github",
         "huggingface_path": "huggingface",
-        "gitee_path": "gitee"
+        "gitee_path": "gitee",
     },
     "network": {
         "timeout": 30,
         "retry_times": 3,
-        "proxy": {
-            "http": None,
-            "https": None
-        }
+        "proxy": {"http": None, "https": None},
     },
-    "download": {
-        "chunk_size": 8192,
-        "max_workers": 4,
-        "skip_existing": True
-    }
+    "download": {"chunk_size": 8192, "max_workers": 4, "skip_existing": True},
 }
 ```
 

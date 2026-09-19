@@ -125,7 +125,7 @@ pytest --cov=funhub tests/
 
 ## 📝 变更日志
 
-详细的变更记录请参考 [docs/CHANGELOG.md](docs/CHANGELOG.md)
+详细的变更记录请参考 [CHANGELOG.md](CHANGELOG.md)
 
 ## 🤝 贡献指南
 
@@ -149,3 +149,16 @@ pytest --cov=funhub tests/
 
 - 项目地址：https://github.com/farfarfun/funhub
 - 问题反馈：https://github.com/farfarfun/funhub/issues
+
+---
+
+## 关于 farfarfun
+
+[farfarfun](https://github.com/farfarfun) 是一个专注于实用工具库的开源组织，
+涵盖云存储、数据处理、AI、多媒体与开发工具链等方向。
+
+- 🏠 组织主页：<https://github.com/farfarfun>
+- 📦 PyPI：<https://pypi.org/user/niuliangtao/>
+- 📧 联系：farfarfun@qq.com
+
+本项目基于 [MIT](LICENSE) 协议开源。
