@@ -3,10 +3,11 @@
 用于管理funhub的配置信息，包括存储路径、代理设置等
 """
 
-import yaml
 from pathlib import Path
-from typing import Dict, Any, Optional
-from funutil import getLogger
+from typing import Any
+
+import yaml
+from farlog import getLogger
 
 logger = getLogger("funhub")
 
@@ -14,7 +15,7 @@ logger = getLogger("funhub")
 class Config:
     """配置管理类"""
 
-    def __init__(self, config_path: Optional[str] = None):
+    def __init__(self, config_path: str | None = None):
         """
         初始化配置管理器
 
@@ -31,7 +32,7 @@ class Config:
         self.config_dir.mkdir(parents=True, exist_ok=True)
         self._config = self._load_config()
 
-    def _load_config(self) -> Dict[str, Any]:
+    def _load_config(self) -> dict[str, Any]:
         """加载配置文件"""
         if self.config_path.exists():
             try:
@@ -39,14 +40,14 @@ class Config:
                     config = yaml.safe_load(f) or {}
                 logger.info(f"已加载配置文件: {self.config_path}")
                 return config
-            except Exception as e:
-                logger.error(f"加载配置文件失败: {e}")
+            except (OSError, yaml.YAMLError) as e:
+                logger.error(f"加载配置文件失败: {self.config_path}, {e}")
                 return self._get_default_config()
         else:
             logger.info("配置文件不存在，使用默认配置")
             return self._get_default_config()
 
-    def _get_default_config(self) -> Dict[str, Any]:
+    def _get_default_config(self) -> dict[str, Any]:
         """获取默认配置"""
         return {
             "storage": {
@@ -75,8 +76,9 @@ class Config:
                     indent=2,
                 )
             logger.success(f"配置已保存到: {self.config_path}")
-        except Exception as e:
-            logger.error(f"保存配置文件失败: {e}")
+        except OSError as e:
+            logger.error(f"保存配置文件失败: {self.config_path}, {e}")
+            raise
 
     def get(self, key: str, default: Any = None) -> Any:
         """

@@ -1,10 +1,12 @@
 [project]
 name = "funhub"
-version = "0.1.2"
+version = "0.1.3"
 description = "统一管理GitHub、HuggingFace等Git仓库的代码存储工具"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = [ "requests>=2.31.0", "click>=8.1.0", "pyyaml>=6.0", "tqdm>=4.65.0", "funutil>=0.1.0", "gitpython>=3.1.0", "fundrive>=0.1.0",]
+license = "MIT"
+license-files = ["LICENSE"]
+dependencies = [ "requests>=2.31.0", "click>=8.1.0", "pyyaml>=6.0", "tqdm>=4.65.0", "farlog>=1.1.7", "funget>=1.1.63", "gitpython>=3.1.0", "fundrive>=0.1.0",]
 [[project.authors]]
 name = "牛哥"
 email = "niuliangtao@qq.com"
@@ -32,9 +34,6 @@ funhub = "funhub.cli:main"
 Organization = "https://github.com/farfarfun"
 Repository = "https://github.com/farfarfun/funhub"
 Releases = "https://github.com/farfarfun/funhub/releases"
-
-[tool.setuptools]
-license-files = []
 
 [dependency-groups]
 dev = [ "pytest>=8.0.0",]

@@ -4,13 +4,13 @@ GitHub仓库提供者
 """
 
 import os
-import requests
 import tempfile
-from typing import Dict, Tuple
 from urllib.parse import urlparse
 
-from funhub.base import BaseProvider, SyncResult
-from funhub.base import base_config
+import funget
+import requests
+
+from funhub.base import BaseProvider, SyncResult, base_config, proxy_env
 
 
 class GitHubProvider(BaseProvider):
@@ -44,26 +44,24 @@ class GitHubProvider(BaseProvider):
             )
 
             # 设置请求参数
-            timeout = base_config.get("network.timeout", 30)
+            chunk_size = base_config.get("download.chunk_size", 8192)
             proxies = self._get_proxies()
 
             self.logger.info(f"开始下载GitHub仓库: {download_url}")
 
             # 下载ZIP文件到临时目录
-            with tempfile.NamedTemporaryFile(suffix=".zip", delete=False) as temp_file:
-                response = requests.get(
-                    download_url, timeout=timeout, proxies=proxies, stream=True
+            temp_zip_path = os.path.join(
+                tempfile.gettempdir(), f"funhub-{user}-{repo}-{branch}.zip"
+            )
+            with proxy_env(proxies):
+                ok = funget.download(
+                    download_url,
+                    temp_zip_path,
+                    overwrite=True,
+                    chunk_size=chunk_size,
                 )
-                response.raise_for_status()
-
-                # 写入临时文件
-                for chunk in response.iter_content(
-                    chunk_size=base_config.get("download.chunk_size", 8192)
-                ):
-                    if chunk:
-                        temp_file.write(chunk)
-
-                temp_zip_path = temp_file.name
+            if not ok:
+                return SyncResult(False, message=f"下载仓库归档失败: {download_url}")
 
             self.logger.info("下载完成，准备上传到fundrive")
 
@@ -102,7 +100,7 @@ class GitHubProvider(BaseProvider):
             self.logger.error(f"同步GitHub仓库时发生错误: {e}")
             return SyncResult(False, message=f"同步过程中发生错误: {e}")
 
-    def get_repo_info(self, user: str, repo: str) -> Dict:
+    def get_repo_info(self, user: str, repo: str) -> dict:
         """
         获取GitHub仓库信息
 
@@ -145,7 +143,7 @@ class GitHubProvider(BaseProvider):
             self.logger.error(f"解析GitHub仓库信息时发生错误: {e}")
             return {}
 
-    def parse_url(self, url: str) -> Tuple[str, str]:
+    def parse_url(self, url: str) -> tuple[str, str]:
         """
         解析GitHub仓库URL
 
@@ -163,8 +161,7 @@ class GitHubProvider(BaseProvider):
                 user = path_parts[0]
                 repo = path_parts[1]
                 # 移除.git后缀
-                if repo.endswith(".git"):
-                    repo = repo[:-4]
+                repo = repo.removesuffix(".git")
                 return user, repo
             else:
                 raise ValueError(f"无效的GitHub URL格式: {url}")
@@ -173,7 +170,7 @@ class GitHubProvider(BaseProvider):
             self.logger.error(f"解析GitHub URL失败: {e}")
             raise
 
-    def _get_proxies(self) -> Dict:
+    def _get_proxies(self) -> dict:
         """获取代理设置"""
         http_proxy = base_config.get("network.proxy.http")
         https_proxy = base_config.get("network.proxy.https")

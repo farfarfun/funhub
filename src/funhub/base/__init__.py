@@ -1,6 +1,4 @@
-from .config import Config
-from .provider import BaseProvider
-from .provider import SyncResult
-from .config import base_config
+from .config import Config, base_config
+from .provider import BaseProvider, SyncResult, proxy_env
 
-__all__ = ["Config", "BaseProvider", "SyncResult", "base_config"]
+__all__ = ["BaseProvider", "Config", "SyncResult", "base_config", "proxy_env"]

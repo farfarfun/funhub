@@ -12,8 +12,8 @@ __author__ = "FarFarFun Team"
 __email__ = "contact@farfarfun.com"
 
 # 导入核心组件
+from .base import BaseProvider, SyncResult, base_config
 from .manager import RepoManager
-from .base import base_config, BaseProvider, SyncResult
 
 # 导入具体提供者
 from .providers.github import GitHubProvider
@@ -23,11 +23,11 @@ from .providers.huggingface import HuggingFaceProvider
 repo_manager = RepoManager()
 
 __all__ = [
-    "RepoManager",
-    "repo_manager",
-    "base_config",
     "BaseProvider",
-    "SyncResult",
     "GitHubProvider",
     "HuggingFaceProvider",
+    "RepoManager",
+    "SyncResult",
+    "base_config",
+    "repo_manager",
 ]
