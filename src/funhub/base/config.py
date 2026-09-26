@@ -29,7 +29,6 @@ class Config:
             self.config_path = Path(config_path)
             self.config_dir = self.config_path.parent
 
-        self.config_dir.mkdir(parents=True, exist_ok=True)
         self._config = self._load_config()
 
     def _load_config(self) -> dict[str, Any]:
@@ -64,9 +63,10 @@ class Config:
             "download": {"chunk_size": 8192, "max_workers": 4, "skip_existing": True},
         }
 
-    def save_config(self):
+    def save_config(self) -> None:
         """保存配置到文件"""
         try:
+            self.config_dir.mkdir(parents=True, exist_ok=True)
             with open(self.config_path, "w", encoding="utf-8") as f:
                 yaml.dump(
                     self._config,
@@ -102,7 +102,7 @@ class Config:
 
         return value
 
-    def set(self, key: str, value: Any):
+    def set(self, key: str, value: Any) -> None:
         """
         设置配置值
 
@@ -119,7 +119,11 @@ class Config:
             config = config[k]
 
         config[keys[-1]] = value
-        logger.info(f"设置配置 {key} = {value}")
+        sensitive = any(
+            part in {"token", "password", "secret", "api_key", "access_key"}
+            for part in key.lower().replace("-", "_").split(".")
+        )
+        logger.info(f"设置配置 {key} = {'***' if sensitive else value}")
 
     def get_storage_path(self, source: str, user: str, repo: str) -> Path:
         """

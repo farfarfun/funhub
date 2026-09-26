@@ -16,7 +16,7 @@ FunHub 采用**完全解耦**的架构设计：
 ### 安装
 
 ```bash
-pip install funhub
+uv tool install funhub
 ```
 
 ### 基本使用
@@ -98,8 +98,8 @@ fundrive download <fid> ./target_folder
 git clone https://github.com/farfarfun/funhub.git
 cd funhub
 
-# 安装依赖
-pip install -e .
+# 安装依赖（根据 uv.lock 复现环境）
+uv sync
 ```
 
 ### 代码规范
@@ -113,10 +113,10 @@ pip install -e .
 
 ```bash
 # 运行测试
-pytest tests/
+uv run pytest tests/
 
-# 测试覆盖率
-pytest --cov=funhub tests/
+# 测试覆盖率（需额外安装 pytest-cov）
+uv run pytest --cov=funhub tests/
 ```
 
 ## 📖 API 文档

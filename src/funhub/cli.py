@@ -17,7 +17,7 @@ logger = getLogger("funhub.cli")
 
 @click.group()
 @click.version_option(version=version("funhub"))
-def main():
+def main() -> None:
     """FunHub - 将GitHub、HuggingFace等Git仓库同步到fundrive的工具
 
     注意：funhub只负责同步Git仓库到fundrive并返回fid，
@@ -29,7 +29,7 @@ def main():
 @click.argument("url")
 @click.option("--force", "-f", is_flag=True, help="强制重新同步，即使仓库已存在")
 @click.option("--branch", "-b", default="main", help="指定分支名，默认为main")
-def sync(url: str, force: bool, branch: str):
+def sync(url: str, force: bool, branch: str) -> None:
     """
     同步Git仓库到fundrive
 
@@ -51,7 +51,7 @@ def sync(url: str, force: bool, branch: str):
 
 @main.command()
 @click.option("--source", "-s", help="指定来源 (github, huggingface等)")
-def list(source: str | None):
+def list(source: str | None) -> None:
     """列出已同步的仓库"""
     repos = repo_manager.list_synced_repos(source)
 
@@ -81,7 +81,7 @@ def list(source: str | None):
 @click.argument("user")
 @click.argument("repo")
 @click.option("--branch", "-b", default="main", help="指定分支名，默认为main")
-def remove(source: str, user: str, repo: str, branch: str):
+def remove(source: str, user: str, repo: str, branch: str) -> None:
     """
     删除同步记录
 
@@ -107,7 +107,7 @@ def remove(source: str, user: str, repo: str, branch: str):
 @click.argument("user")
 @click.argument("repo")
 @click.option("--branch", "-b", default="main", help="指定分支名，默认为main")
-def info(source: str, user: str, repo: str, branch: str):
+def info(source: str, user: str, repo: str, branch: str) -> None:
     """
     显示仓库信息
 
@@ -146,12 +146,12 @@ def info(source: str, user: str, repo: str, branch: str):
 
 
 @main.group()
-def config_cmd():
+def config_cmd() -> None:
     """配置管理"""
 
 
 @config_cmd.command(name="show")
-def show_config():
+def show_config() -> None:
     """显示当前配置"""
     click.echo("当前配置:")
     click.echo(f"存储路径: {base_config.get('storage.base_path')}")
@@ -165,7 +165,7 @@ def show_config():
 @config_cmd.command(name="set")
 @click.argument("key")
 @click.argument("value")
-def set_config(key: str, value: str):
+def set_config(key: str, value: str) -> None:
     """
     设置配置项
 
@@ -185,7 +185,7 @@ def set_config(key: str, value: str):
 
 
 @config_cmd.command(name="init")
-def init_config():
+def init_config() -> None:
     """初始化配置文件"""
     base_config.save_config()
     click.echo(

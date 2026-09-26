@@ -138,10 +138,14 @@ class GitHubProvider(BaseProvider):
 
         except requests.exceptions.RequestException as e:
             self.logger.error(f"获取GitHub仓库信息失败: {e}")
-            return {}
-        except Exception as e:
+            raise RuntimeError(
+                f"获取GitHub仓库信息失败 ({user}/{repo})"
+            ) from e
+        except (ValueError, KeyError, TypeError) as e:
             self.logger.error(f"解析GitHub仓库信息时发生错误: {e}")
-            return {}
+            raise RuntimeError(
+                f"解析GitHub仓库信息失败 ({user}/{repo})"
+            ) from e
 
     def parse_url(self, url: str) -> tuple[str, str]:
         """

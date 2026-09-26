@@ -68,6 +68,7 @@ class RepoManager:
         """保存同步记录"""
         records_file = base_config.config_dir / "sync_records.json"
         try:
+            records_file.parent.mkdir(parents=True, exist_ok=True)
             with open(records_file, "w", encoding="utf-8") as f:
                 json.dump(self.sync_records, f, ensure_ascii=False, indent=2)
             logger.info("同步记录已保存")
@@ -175,7 +176,8 @@ class RepoManager:
                 return "gitee"
 
             return None
-        except Exception:
+        except ValueError as e:
+            logger.error(f"识别仓库来源失败: {url}: {e}")
             return None
 
     def get_repo_fid(
