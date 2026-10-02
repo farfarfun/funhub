@@ -96,8 +96,11 @@ class GitHubProvider(BaseProvider):
         except requests.exceptions.RequestException as e:
             self.logger.error(f"网络请求失败: {e}")
             return SyncResult(False, message=f"网络请求失败: {e}")
-        except Exception as e:
-            self.logger.error(f"同步GitHub仓库时发生错误: {e}")
+        except OSError as e:
+            self.logger.error(f"同步GitHub仓库时发生文件操作错误: {e}")
+            return SyncResult(False, message=f"文件操作失败: {e}")
+        except RuntimeError as e:
+            self.logger.error(f"同步GitHub仓库时获取仓库信息失败: {e}")
             return SyncResult(False, message=f"同步过程中发生错误: {e}")
 
     def get_repo_info(self, user: str, repo: str) -> dict:

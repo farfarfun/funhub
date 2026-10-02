@@ -104,7 +104,7 @@ class RepoManager:
             # 解析URL获取用户名和仓库名
             try:
                 user, repo = provider.parse_url(url)
-            except Exception as e:
+            except ValueError as e:
                 return SyncResult(False, message=f"解析URL失败: {e}")
 
             # 验证仓库名称
@@ -150,9 +150,9 @@ class RepoManager:
 
             return sync_result
 
-        except Exception as e:
-            logger.error(f"同步仓库时发生错误: {e}")
-            return SyncResult(False, message=f"同步过程中发生错误: {e}")
+        except OSError as e:
+            logger.error(f"同步仓库时发生文件操作错误: {e}")
+            return SyncResult(False, message=f"同步过程中发生文件操作错误: {e}")
 
     def _identify_source(self, url: str) -> str | None:
         """

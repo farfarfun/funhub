@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 license = "MIT"
 license-files = ["LICENSE"]
-dependencies = [ "requests>=2.31.0", "click>=8.1.0", "pyyaml>=6.0", "tqdm>=4.65.0", "farlog>=1.1.7", "funget>=1.1.63", "gitpython>=3.1.0", "fundrive>=0.1.0",]
+dependencies = [ "requests>=2.31.0", "click>=8.1.0", "pyyaml>=6.0", "farlog>=1.1.7", "funget>=1.1.63", "fundrive>=0.1.0",]
 [[project.authors]]
 name = "牛哥"
 email = "niuliangtao@qq.com"

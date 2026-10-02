@@ -15,9 +15,18 @@ Git仓库提供者抽象基类，负责将不同Git平台的仓库同步到fundr
 ```python
 class BaseProvider(ABC):
     """Git仓库提供者抽象基类"""
-    
-    def __init__(self, provider_name: str):
-        """初始化提供者"""
+
+    def __init__(
+        self, provider_name: str, drive: BaseDrive = None, root_fid: str = "./"
+    ):
+        """
+        初始化提供者
+
+        Args:
+            provider_name: 提供者名称，如 'github', 'huggingface'
+            drive: fundrive对象，如果不传则使用OSDrive作为默认值
+            root_fid: fundrive中的根路径，默认为当前目录
+        """
 ```
 
 #### 主要方法
@@ -73,6 +82,55 @@ def parse_url(self, url: str) -> tuple[str, str]:
         
     Returns:
         (用户名, 仓库名) 元组
+    """
+```
+
+##### get_drive_path()
+
+```python
+def get_drive_path(self, user: str, repo: str, branch: str = "main") -> str:
+    """
+    获取在fundrive中的存储路径
+
+    Args:
+        user: 用户名
+        repo: 仓库名
+        branch: 分支名
+
+    Returns:
+        fundrive中的路径
+    """
+```
+
+##### validate_repo_name()
+
+```python
+def validate_repo_name(self, user: str, repo: str) -> bool:
+    """
+    验证仓库名称是否有效
+
+    Args:
+        user: 用户名
+        repo: 仓库名
+
+    Returns:
+        是否有效
+    """
+```
+
+##### upload_to_drive()
+
+```python
+def upload_to_drive(self, file_path: str, drive_path: str, *args, **kwargs) -> str:
+    """
+    上传文件到fundrive
+
+    Args:
+        file_path: 本地文件路径
+        drive_path: fundrive中的路径
+
+    Returns:
+        文件ID，失败返回空字符串
     """
 ```
 
@@ -203,6 +261,50 @@ if fid:
     # fundrive download {fid} ./target_folder
 ```
 
+##### remove_sync_record()
+
+```python
+def remove_sync_record(
+    self, source: str, user: str, repo: str, branch: str = "main"
+) -> bool:
+    """
+    删除同步记录
+
+    Args:
+        source: 来源
+        user: 用户名
+        repo: 仓库名
+        branch: 分支名
+
+    Returns:
+        是否删除成功
+    """
+```
+
+**使用示例：**
+
+```python
+# 删除同步记录
+removed = repo_manager.remove_sync_record("github", "user", "repo")
+```
+
+##### get_repo_info()
+
+```python
+def get_repo_info(self, source: str, user: str, repo: str) -> dict:
+    """
+    获取仓库信息
+
+    Args:
+        source: 来源
+        user: 用户名
+        repo: 仓库名
+
+    Returns:
+        仓库信息字典
+    """
+```
+
 ## 具体提供者
 
 ### GitHubProvider
@@ -291,6 +393,30 @@ def set(self, key: str, value: Any):
     Args:
         key: 配置键，支持点分隔的嵌套键
         value: 配置值
+    """
+```
+
+##### save_config()
+
+```python
+def save_config(self) -> None:
+    """保存配置到文件"""
+```
+
+##### get_storage_path()
+
+```python
+def get_storage_path(self, source: str, user: str, repo: str) -> Path:
+    """
+    获取仓库存储路径
+
+    Args:
+        source: 来源，如 'github', 'huggingface'
+        user: 用户名
+        repo: 仓库名
+
+    Returns:
+        存储路径
     """
 ```
 

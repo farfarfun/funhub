@@ -5,6 +5,19 @@
 格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，
 并且本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [未发布]
+
+### 修复
+- 删除 `pyproject.toml` 中未被源码使用的 `tqdm`、`gitpython` 依赖
+- 同步更新 `docs/API.md` 中 `BaseProvider.__init__` 的构造函数签名（补充 `drive`、`root_fid` 参数），
+  并补齐此前遗漏的 `BaseProvider.get_drive_path`/`validate_repo_name`/`upload_to_drive`、
+  `RepoManager.remove_sync_record`/`get_repo_info`、`Config.save_config`/`get_storage_path` 等公开方法文档
+- 收窄 `RepoManager.sync_repo`、`GitHubProvider.sync_repo_to_drive`、
+  `HuggingFaceProvider.sync_repo_to_drive` 中过于宽泛的 `except Exception`，
+  只捕获网络（`requests.exceptions.RequestException`）、文件操作（`OSError`）、
+  领域错误（`RuntimeError`）等可恢复异常并转换为 `SyncResult(False, ...)`，
+  未预期的编程错误不再被静默吞并为普通同步失败结果，而是继续向上暴露
+
 ## [0.1.3] - 2026-09-19
 
 ### 修复
