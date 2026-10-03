@@ -98,7 +98,7 @@ fundrive download <fid> ./target_folder
 git clone https://github.com/farfarfun/funhub.git
 cd funhub
 
-# 安装依赖（根据 uv.lock 复现环境）
+# 安装依赖（根据 pyproject.toml 解析环境）
 uv sync
 ```
 
