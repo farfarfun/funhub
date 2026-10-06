@@ -1,9 +1,11 @@
 import os
 import tempfile
+from typing import Any
 from urllib.parse import urlparse
 
 import funget
 import requests
+from fundrive.core import BaseDrive
 
 from funhub.base import BaseProvider, SyncResult, base_config, proxy_env
 
@@ -11,7 +13,7 @@ from funhub.base import BaseProvider, SyncResult, base_config, proxy_env
 class HuggingFaceProvider(BaseProvider):
     """HuggingFace仓库提供者"""
 
-    def __init__(self, drive=None):
+    def __init__(self, drive: BaseDrive | None = None) -> None:
         """初始化HuggingFace提供者"""
         super().__init__("huggingface", drive)
         self.api_base = "https://huggingface.co/api"
@@ -98,7 +100,7 @@ class HuggingFaceProvider(BaseProvider):
             self.logger.error(f"同步HuggingFace仓库时获取仓库信息失败: {e}")
             return SyncResult(False, message=f"同步过程中发生错误: {e}")
 
-    def get_repo_info(self, user: str, repo: str) -> dict:
+    def get_repo_info(self, user: str, repo: str) -> dict[str, Any]:
         """
         获取HuggingFace仓库信息
 
@@ -172,7 +174,7 @@ class HuggingFaceProvider(BaseProvider):
             self.logger.error(f"解析HuggingFace URL失败: {e}")
             raise
 
-    def _get_proxies(self) -> dict:
+    def _get_proxies(self) -> dict[str, str]:
         """获取代理设置"""
         http_proxy = base_config.get("network.proxy.http")
         https_proxy = base_config.get("network.proxy.https")
