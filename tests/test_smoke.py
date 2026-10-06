@@ -166,6 +166,60 @@ def test_huggingface_provider_parse_url():
     )
 
 
+@pytest.mark.parametrize("provider_cls", [GitHubProvider, HuggingFaceProvider])
+def test_provider_parse_url_rejects_missing_repository(provider_cls):
+    provider = provider_cls(drive=MagicMock())
+
+    with pytest.raises(ValueError):
+        provider.parse_url("https://example.com/owner")
+
+
+def test_provider_upload_to_drive_returns_uploaded_fid():
+    drive = MagicMock()
+    drive.upload_dir.return_value = "fid-123"
+    provider = GitHubProvider(drive=drive)
+
+    assert provider.upload_to_drive("archive.zip", "github/octocat/repo/main") == "fid-123"
+    drive.upload_dir.assert_called_once_with(
+        filedir="archive.zip", fid="github/octocat/repo/main"
+    )
+
+
+@pytest.mark.parametrize("provider_cls", [GitHubProvider, HuggingFaceProvider])
+def test_provider_sync_repo_to_drive_success(provider_cls, tmp_path, monkeypatch):
+    drive = MagicMock()
+    drive.upload_dir.return_value = "fid-123"
+    provider = provider_cls(drive=drive)
+    monkeypatch.setattr(provider, "get_repo_info", lambda _user, _repo: {"name": "repo"})
+    monkeypatch.setattr("tempfile.gettempdir", lambda: str(tmp_path))
+
+    def download(_url, path, **_kwargs):
+        with open(path, "wb") as archive:
+            archive.write(b"archive")
+        return True
+
+    monkeypatch.setattr("funget.download", download)
+
+    result = provider.sync_repo_to_drive("octocat", "repo")
+
+    assert result.success is True
+    assert result.fid == "fid-123"
+    drive.upload_dir.assert_called_once()
+
+
+@pytest.mark.parametrize("provider_cls", [GitHubProvider, HuggingFaceProvider])
+def test_provider_sync_repo_to_drive_returns_failure_when_download_fails(
+    provider_cls, monkeypatch
+):
+    provider = provider_cls(drive=MagicMock())
+    monkeypatch.setattr("funget.download", lambda *_args, **_kwargs: False)
+
+    result = provider.sync_repo_to_drive("octocat", "repo")
+
+    assert result.success is False
+    assert "下载仓库归档失败" in result.message
+
+
 @patch("funhub.providers.github.requests.get")
 def test_github_provider_get_repo_info_mocked(mock_get):
     mock_response = MagicMock()

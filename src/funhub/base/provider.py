@@ -1,6 +1,7 @@
 import os
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
+from typing import Any, Iterator
 
 from farlog import getLogger
 from fundrive.core import BaseDrive
@@ -10,7 +11,7 @@ logger = getLogger("funhub")
 
 
 @contextmanager
-def proxy_env(proxies: dict[str, str] | None):
+def proxy_env(proxies: dict[str, str] | None) -> Iterator[None]:
     """在 with 代码块内临时设置 HTTP_PROXY/HTTPS_PROXY 环境变量。
 
     `funget` 的下载器不接受显式的 `proxies` 参数，但底层 `requests.Session`
@@ -52,8 +53,8 @@ class SyncResult:
         success: bool,
         fid: str | None = None,
         message: str = "",
-        metadata: dict | None = None,
-    ):
+        metadata: dict[str, Any] | None = None,
+    ) -> None:
         """
         初始化同步结果
 
@@ -68,7 +69,7 @@ class SyncResult:
         self.message = message
         self.metadata = metadata or {}
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"SyncResult(success={self.success}, fid={self.fid}, message='{self.message}')"
 
 
@@ -80,8 +81,11 @@ class BaseProvider(ABC):
     """
 
     def __init__(
-        self, provider_name: str, drive: BaseDrive = None, root_fid: str = "./"
-    ):
+        self,
+        provider_name: str,
+        drive: BaseDrive | None = None,
+        root_fid: str = "./",
+    ) -> None:
         """
         初始化提供者
 
@@ -118,7 +122,7 @@ class BaseProvider(ABC):
         """
 
     @abstractmethod
-    def get_repo_info(self, user: str, repo: str) -> dict:
+    def get_repo_info(self, user: str, repo: str) -> dict[str, Any]:
         """
         获取仓库基本信息
 
@@ -178,7 +182,9 @@ class BaseProvider(ABC):
 
         return True
 
-    def upload_to_drive(self, file_path: str, drive_path: str, *args, **kwargs) -> str:
+    def upload_to_drive(
+        self, file_path: str, drive_path: str, *args: Any, **kwargs: Any
+    ) -> str:
         """
         上传文件到fundrive
 

@@ -15,6 +15,8 @@ FunHub 采用**完全解耦**的架构设计：
 
 ### 安装
 
+运行 FunHub 需要 Python 3.12 或更高版本、`uv` 以及可访问 GitHub、HuggingFace 和 fundrive 的网络环境。
+
 ```bash
 uv tool install funhub
 ```
@@ -133,7 +135,7 @@ uv run pytest --cov=funhub tests/
 
 1. Fork 本仓库
 2. 创建您的特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交您的更改 (`git commit -m 'Add some AmazingFeature'`)
+3. 提交您的更改（提交信息使用中文 `<类型>: <做了什么>` 格式，并说明修改原因，例如 `git commit -m 'feat: 增加仓库同步功能'`）
 4. 推送到分支 (`git push origin feature/AmazingFeature`)
 5. 打开一个 Pull Request
 

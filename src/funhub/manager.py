@@ -5,9 +5,11 @@
 
 import json
 from pathlib import Path
+from typing import Any
 from urllib.parse import urlparse
 
 from farlog import getLogger
+from fundrive.core import BaseDrive
 
 from funhub.base import BaseProvider, SyncResult, base_config
 
@@ -21,7 +23,7 @@ class RepoManager:
     并管理从fundrive下载仓库的功能
     """
 
-    def __init__(self, drive=None):
+    def __init__(self, drive: BaseDrive | None = None) -> None:
         """初始化仓库管理器
 
         Args:
@@ -29,7 +31,7 @@ class RepoManager:
         """
         self.drive = drive
         self.providers: dict[str, BaseProvider] = {}
-        self.sync_records: dict[str, dict] = {}
+        self.sync_records: dict[str, dict[str, Any]] = {}
         self._register_providers()
         self._load_sync_records()
 
@@ -199,7 +201,7 @@ class RepoManager:
         record = self.sync_records.get(record_key)
         return record.get("fid") if record else None
 
-    def list_synced_repos(self, source: str | None = None) -> list[dict]:
+    def list_synced_repos(self, source: str | None = None) -> list[dict[str, Any]]:
         """
         列出已同步的仓库
 
@@ -242,7 +244,7 @@ class RepoManager:
             logger.warning(f"同步记录不存在: {record_key}")
             return False
 
-    def get_repo_info(self, source: str, user: str, repo: str) -> dict:
+    def get_repo_info(self, source: str, user: str, repo: str) -> dict[str, Any]:
         """
         获取仓库信息
 
