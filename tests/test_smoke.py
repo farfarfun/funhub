@@ -113,6 +113,26 @@ def test_config_get_set_save_roundtrip(tmp_path):
     assert cfg2.get("storage.base_path") == "/tmp/somewhere"
 
 
+def test_config_rejects_sensitive_keys_and_does_not_persist_them(tmp_path):
+    cfg_path = tmp_path / "config.yaml"
+    cfg = Config(config_path=str(cfg_path))
+
+    with pytest.raises(ValueError, match="敏感配置"):
+        cfg.set("github_token", "secret-value")
+
+    cfg.save_config()
+    assert "secret-value" not in cfg_path.read_text(encoding="utf-8")
+
+
+def test_config_refuses_to_save_loaded_sensitive_values(tmp_path):
+    cfg_path = tmp_path / "config.yaml"
+    cfg_path.write_text("credentials:\n  api_key: secret-value\n", encoding="utf-8")
+    cfg = Config(config_path=str(cfg_path))
+
+    with pytest.raises(ValueError, match="敏感配置"):
+        cfg.save_config()
+
+
 def test_config_get_storage_path(tmp_path):
     cfg_path = tmp_path / "config.yaml"
     cfg = Config(config_path=str(cfg_path))
