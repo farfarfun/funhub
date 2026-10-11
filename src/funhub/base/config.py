@@ -11,6 +11,37 @@ from farlog import getLogger
 
 logger = getLogger("funhub")
 
+_SENSITIVE_KEY_SUFFIXES = (
+    "token",
+    "password",
+    "secret",
+    "api_key",
+    "access_key",
+)
+
+
+def _is_sensitive_key(key: str) -> bool:
+    """Return whether a dotted configuration key could contain credentials."""
+    key_parts = key.lower().replace("-", "_").split(".")
+    return any(
+        part == suffix or part.endswith(f"_{suffix}")
+        for part in key_parts
+        for suffix in _SENSITIVE_KEY_SUFFIXES
+    )
+
+
+def _find_sensitive_key(config: dict[str, Any], prefix: str = "") -> str | None:
+    """Find the first credential-like key in a nested configuration mapping."""
+    for key, value in config.items():
+        full_key = f"{prefix}.{key}" if prefix else key
+        if _is_sensitive_key(full_key):
+            return full_key
+        if isinstance(value, dict):
+            sensitive_key = _find_sensitive_key(value, full_key)
+            if sensitive_key:
+                return sensitive_key
+    return None
+
 
 class Config:
     """配置管理类"""
@@ -65,6 +96,10 @@ class Config:
 
     def save_config(self) -> None:
         """保存配置到文件"""
+        sensitive_key = _find_sensitive_key(self._config)
+        if sensitive_key:
+            raise ValueError(f"敏感配置不允许写入配置文件: {sensitive_key}")
+
         try:
             self.config_dir.mkdir(parents=True, exist_ok=True)
             with open(self.config_path, "w", encoding="utf-8") as f:
@@ -110,6 +145,9 @@ class Config:
             key: 配置键，支持点分隔的嵌套键
             value: 配置值
         """
+        if _is_sensitive_key(key):
+            raise ValueError(f"敏感配置不允许通过 Config.set 设置: {key}")
+
         keys = key.split(".")
         config = self._config
 
@@ -119,11 +157,7 @@ class Config:
             config = config[k]
 
         config[keys[-1]] = value
-        sensitive = any(
-            part in {"token", "password", "secret", "api_key", "access_key"}
-            for part in key.lower().replace("-", "_").split(".")
-        )
-        logger.info(f"设置配置 {key} = {'***' if sensitive else value}")
+        logger.info(f"设置配置 {key} = {value}")
 
     def get_storage_path(self, source: str, user: str, repo: str) -> Path:
         """

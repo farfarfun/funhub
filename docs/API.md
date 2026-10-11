@@ -17,7 +17,10 @@ class BaseProvider(ABC):
     """Git仓库提供者抽象基类"""
 
     def __init__(
-        self, provider_name: str, drive: BaseDrive = None, root_fid: str = "./"
+        self,
+        provider_name: str,
+        drive: BaseDrive | None = None,
+        root_fid: str = "./",
     ):
         """
         初始化提供者
@@ -25,7 +28,8 @@ class BaseProvider(ABC):
         Args:
             provider_name: 提供者名称，如 'github', 'huggingface'
             drive: fundrive对象，如果不传则使用OSDrive作为默认值
-            root_fid: fundrive中的根路径，默认为当前目录
+            root_fid: fundrive 中同步目标的根路径，默认为当前目录 ("./")；
+                会作为所有仓库同步路径的起点
         """
 ```
 

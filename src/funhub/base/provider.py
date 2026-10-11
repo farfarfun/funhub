@@ -92,6 +92,8 @@ class BaseProvider(ABC):
         Args:
             provider_name: 提供者名称，如 'github', 'huggingface'
             drive: fundrive对象，如果不传则使用OSdrive作为默认值
+            root_fid: fundrive 中同步目标的根路径，默认为当前目录 ("./")；
+                会作为所有仓库同步路径的起点。
         """
         self.provider_name = provider_name
         self.logger = getLogger(f"funhub.{provider_name}")

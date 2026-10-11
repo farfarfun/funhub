@@ -170,7 +170,7 @@ class HuggingFaceProvider(BaseProvider):
             else:
                 raise ValueError(f"无效的HuggingFace URL格式: {url}")
 
-        except Exception as e:
+        except ValueError as e:
             self.logger.error(f"解析HuggingFace URL失败: {e}")
             raise
 
